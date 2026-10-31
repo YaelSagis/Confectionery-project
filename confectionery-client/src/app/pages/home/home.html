@@ -1,0 +1,122 @@
+<section class="container hero">
+  <div class="hero-copy">
+    <span class="eyebrow">{{ site.tagline }} · אפייה יומית</span>
+    <h1>
+      עוגות שעושות
+      <span class="accent">רגע מתוק.</span>
+    </h1>
+    <p class="lead">אופים בעבודת יד, בכמויות קטנות ולפי הזמנה. בוחרים מהתפריט, קובעים תאריך, ואנחנו דואגים לכל השאר.</p>
+
+    <div class="cta">
+      <a routerLink="/menu" class="btn btn-ink">
+        לתפריט ולהזמנה
+        <app-icon name="arrow" [size]="17" />
+      </a>
+      <button type="button" class="btn btn-ghost" (click)="scrollTo('about')">הסיפור שלנו</button>
+    </div>
+
+    <ul class="facts">
+      @for (h of site.highlights.slice(0, 3); track h) {
+        <li><app-icon name="check" [size]="15" /> {{ h }}</li>
+      }
+    </ul>
+  </div>
+
+  <figure class="hero-media">
+    <img [src]="photos.hero" alt="פרוסת עוגת שכבות עם קרם ושוקולד" width="1000" height="1250" fetchpriority="high" />
+    <!-- Round "stamp" badge: text along a circle -->
+    <svg class="stamp" viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <path id="stamp-circle" d="M60 60m-44 0a44 44 0 1 1 88 0a44 44 0 1 1-88 0" />
+      </defs>
+      <circle cx="60" cy="60" r="58" />
+      <text>
+        <!-- textLength = circumference (2π·44), so the ring closes exactly -->
+        <textPath href="#stamp-circle" textLength="276" lengthAdjust="spacing">FAIT MAIN · BAKED DAILY · FAIT MAIN · BAKED DAILY · </textPath>
+      </text>
+      <text x="60" y="68" text-anchor="middle" class="stamp-mark">D</text>
+    </svg>
+  </figure>
+</section>
+
+<div class="strip" aria-hidden="true">
+  <div class="strip-track">
+    @for (round of [1, 2]; track round) {
+      @for (h of site.highlights; track h) {
+        <span>{{ h }}</span>
+        <i></i>
+      }
+    }
+  </div>
+</div>
+
+<section id="about" class="container section about">
+  <figure class="about-media">
+    <img [src]="photos.about" alt="ויטרינת מאפים בקונדיטוריה" width="900" height="1100" loading="lazy" />
+  </figure>
+  <div class="about-copy">
+    <span class="eyebrow">הסיפור שלנו</span>
+    <h2>{{ site.about.title }}</h2>
+    @for (p of site.about.paragraphs; track $index) {
+      <p>{{ p }}</p>
+    }
+    <span class="signature">{{ site.about.signature }}</span>
+  </div>
+</section>
+
+<section class="container section">
+  <ul class="gallery" aria-label="גלריה">
+    @for (src of photos.gallery; track src; let i = $index) {
+      <li><img [src]="src" alt="" width="800" height="800" loading="lazy" /></li>
+    }
+  </ul>
+</section>
+
+<section id="how" class="container section how">
+  <header class="section-head">
+    <div>
+      <span class="eyebrow">איך מזמינים</span>
+      <h2>שלושה צעדים, ומשהו מתוק בדרך</h2>
+    </div>
+  </header>
+  <ol class="steps">
+    @for (s of steps; track s.title; let i = $index) {
+      <li class="step">
+        <span class="step-num">0{{ i + 1 }}</span>
+        <span class="step-icon"><app-icon [name]="s.icon" [size]="20" [stroke]="1.75" /></span>
+        <h3>{{ s.title }}</h3>
+        <p>{{ s.text }}</p>
+      </li>
+    }
+  </ol>
+</section>
+
+<section id="faq" class="container section faq">
+  <header class="section-head">
+    <div>
+      <span class="eyebrow">שאלות נפוצות</span>
+      <h2>לפני שמזמינים</h2>
+    </div>
+  </header>
+  <div class="faq-list">
+    @for (item of site.faq; track item.q) {
+      <details>
+        <summary>
+          {{ item.q }}
+          <span class="faq-mark" aria-hidden="true"></span>
+        </summary>
+        <p>{{ item.a }}</p>
+      </details>
+    }
+  </div>
+</section>
+
+<section class="container">
+  <div class="band" [style.background-image]="'url(' + photos.cta + ')'">
+    <div class="band-copy">
+      <h2>מתכננים אירוע?</h2>
+      <p>ימי הולדת, בריתות, ערבי שבת. מזמינים מראש ונתאים לכם בדיוק את מה שצריך.</p>
+    </div>
+    <a routerLink="/menu" class="btn btn-primary">להזמנה <app-icon name="arrow" [size]="17" /></a>
+  </div>
+</section>

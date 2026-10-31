@@ -1,0 +1,240 @@
+<header class="container banner" [style.background-image]="'url(' + photos.menuBanner + ')'">
+  <span class="eyebrow">התפריט</span>
+  <h1>מה נאפה לכם?</h1>
+  <p>בוחרים כמויות, ושולחים הזמנה בקליק. נחזור אליכם לאישור.</p>
+</header>
+
+<div class="container layout">
+  <section>
+    <div class="toolbar">
+      <label class="input-wrap">
+        <app-icon name="search" [size]="17" />
+        <input
+          class="input"
+          type="search"
+          placeholder="חיפוש בתפריט…"
+          aria-label="חיפוש בתפריט"
+          [value]="query()"
+          (input)="query.set($any($event.target).value)"
+        />
+      </label>
+    </div>
+
+    @if (loading()) {
+      <div class="items">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="skeleton item-skel"></div>
+        }
+      </div>
+    } @else if (loadFailed()) {
+      <div class="empty">
+        <span class="empty-icon"><app-icon name="alert" [size]="22" /></span>
+        <h3>התפריט לא נטען</h3>
+        <p>נסו שוב בעוד רגע.</p>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="load()">
+          <app-icon name="refresh" [size]="16" /> ניסיון נוסף
+        </button>
+      </div>
+    } @else if (!filtered().length) {
+      <div class="empty">
+        <span class="empty-icon"><app-icon [name]="catalog().length ? 'search' : 'cake'" [size]="22" /></span>
+        <h3>{{ catalog().length ? 'לא מצאנו את זה בתפריט' : 'התפריט מתעדכן' }}</h3>
+        <p>{{ catalog().length ? 'נסו חיפוש אחר.' : 'בקרוב יופיעו כאן המאפים שלנו.' }}</p>
+      </div>
+    } @else {
+      <div class="items">
+        @for (r of filtered(); track r.id; let i = $index) {
+          @let count = qty(r.id);
+          <article class="card item" [class.selected]="count > 0" [style.animation-delay.ms]="i * 40">
+            <app-recipe-photo [image]="r.imageUrl" [name]="r.name" />
+            <div class="item-body">
+              <h3>
+                <button type="button" class="item-open" (click)="details.set(r)">{{ r.name }}</button>
+              </h3>
+              @if (r.description) {
+                <p class="desc">{{ r.description }}</p>
+              }
+              <div class="item-foot">
+                <span class="price">
+                  {{ r.price != null ? (r.price | currency: 'ILS' : 'symbol-narrow' : '1.0-0') : 'מחיר לפי הזמנה' }}
+                </span>
+                @if (count > 0) {
+                  <div class="stepper" role="group" [attr.aria-label]="'כמות ' + r.name">
+                    <button type="button" (click)="change(r.id, 1)" aria-label="הוספה">
+                      <app-icon name="plus" [size]="15" />
+                    </button>
+                    <span aria-live="polite">{{ count }}</span>
+                    <button type="button" (click)="change(r.id, -1)" aria-label="הפחתה">
+                      <span class="minus"></span>
+                    </button>
+                  </div>
+                } @else {
+                  <button type="button" class="btn btn-ghost btn-sm add" (click)="change(r.id, 1)">
+                    <app-icon name="plus" [size]="15" /> הוספה
+                  </button>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <aside class="summary">
+    <div class="summary-inner">
+      <header>
+        <h2>ההזמנה שלכם</h2>
+        @if (itemCount()) {
+          <span class="count">{{ itemCount() }} פריטים</span>
+        }
+      </header>
+
+      @if (cart().length) {
+        <ul class="lines">
+          @for (l of cart(); track l.item.id) {
+            <li>
+              <span class="line-qty">{{ l.qty }}×</span>
+              <span class="line-name">{{ l.item.name }}</span>
+              <span class="line-price">
+                @if (l.item.price != null) {
+                  {{ l.item.price * l.qty | currency: 'ILS' : 'symbol-narrow' : '1.0-0' }}
+                }
+              </span>
+            </li>
+          }
+        </ul>
+        <div class="total">
+          <span>סה״כ משוער</span>
+          <strong>{{ total() | currency: 'ILS' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <button type="button" class="btn btn-primary checkout" (click)="openCheckout()">
+          המשך להזמנה <app-icon name="arrow" [size]="17" />
+        </button>
+      } @else {
+        <p class="summary-empty">עוד לא נבחרו פריטים. לוחצים על "הוספה" ליד מה שמתחשק.</p>
+      }
+    </div>
+  </aside>
+</div>
+
+@if (itemCount()) {
+  <button type="button" class="mobile-bar" (click)="openCheckout()">
+    <span>{{ itemCount() }} פריטים · {{ total() | currency: 'ILS' : 'symbol-narrow' : '1.0-0' }}</span>
+    <span class="mobile-cta">להזמנה <app-icon name="arrow" [size]="16" /></span>
+  </button>
+}
+
+@if (details(); as d) {
+  @let count = qty(d.id);
+  <app-modal [open]="true" [title]="d.name" eyebrow="מהתפריט" [wide]="true" (closed)="details.set(null)">
+    <app-recipe-photo class="details-photo" [image]="d.imageUrl" [name]="d.name" />
+    @if (d.description) {
+      <p class="details-desc">{{ d.description }}</p>
+    }
+    <div class="details-foot">
+      <span class="details-price">
+        {{ d.price != null ? (d.price | currency: 'ILS' : 'symbol-narrow' : '1.0-0') : 'מחיר לפי הזמנה' }}
+      </span>
+      @if (count > 0) {
+        <div class="stepper" role="group" [attr.aria-label]="'כמות ' + d.name">
+          <button type="button" (click)="change(d.id, 1)" aria-label="הוספה">
+            <app-icon name="plus" [size]="15" />
+          </button>
+          <span aria-live="polite">{{ count }}</span>
+          <button type="button" (click)="change(d.id, -1)" aria-label="הפחתה">
+            <span class="minus"></span>
+          </button>
+        </div>
+      } @else {
+        <button type="button" class="btn btn-primary" (click)="change(d.id, 1)">
+          <app-icon name="plus" [size]="16" /> הוספה להזמנה
+        </button>
+      }
+    </div>
+  </app-modal>
+}
+
+<app-modal [open]="checkoutOpen()" [title]="sent() ? 'ההזמנה התקבלה' : 'פרטים להזמנה'" eyebrow="הזמנה" (closed)="closeCheckout()">
+  @if (sent()) {
+    <div class="success">
+      <span class="success-icon"><app-icon name="check" [size]="26" /></span>
+      <p>תודה! ההזמנה נשלחה אלינו, ונחזור אליכם בטלפון לאישור.</p>
+      <button type="button" class="btn btn-primary" (click)="closeCheckout()">סגירה</button>
+    </div>
+  } @else {
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <ul class="lines compact">
+        @for (l of cart(); track l.item.id) {
+          <li>
+            <span class="line-qty">{{ l.qty }}×</span>
+            <span class="line-name">{{ l.item.name }}</span>
+          </li>
+        }
+      </ul>
+
+      <label class="field">
+        <span>שם מלא</span>
+        <div class="input-wrap">
+          <app-icon name="user" [size]="18" />
+          <input class="input" formControlName="name" autocomplete="name" />
+        </div>
+        @if (hasError('name', 'required')) {
+          <small class="error">נשמח לדעת איך קוראים לכם</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>אימייל</span>
+        <div class="input-wrap">
+          <app-icon name="mail" [size]="18" />
+          <input class="input" type="email" dir="ltr" formControlName="email" placeholder="name@example.com" autocomplete="email" />
+        </div>
+        @if (hasError('email', 'required')) {
+          <small class="error">צריך אימייל כדי שנוכל לאשר</small>
+        } @else if (hasError('email', 'email')) {
+          <small class="error">כתובת האימייל לא תקינה</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>טלפון</span>
+        <div class="input-wrap">
+          <app-icon name="phone" [size]="18" />
+          <input class="input" type="tel" dir="ltr" formControlName="phone" placeholder="050-1234567" autocomplete="tel" />
+        </div>
+        @if (hasError('phone', 'required')) {
+          <small class="error">נתקשר לאשר את ההזמנה</small>
+        } @else if (hasError('phone', 'pattern')) {
+          <small class="error">מספר הטלפון לא תקין</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>תאריך מבוקש</span>
+        <div class="input-wrap">
+          <app-icon name="calendar" [size]="18" />
+          <input class="input" type="date" formControlName="deliveryDate" [min]="minDate" />
+        </div>
+        @if (hasError('deliveryDate', 'required')) {
+          <small class="error">בחרו תאריך</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>הערות (לא חובה)</span>
+        <textarea class="input" formControlName="remarks" rows="2" placeholder="כיתוב על העוגה, אלרגיות…"></textarea>
+      </label>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" (click)="closeCheckout()">חזרה</button>
+        <button type="submit" class="btn btn-primary" [disabled]="sending()">
+          @if (sending()) {
+            <span class="spinner"></span>
+          }
+          שליחת הזמנה
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>

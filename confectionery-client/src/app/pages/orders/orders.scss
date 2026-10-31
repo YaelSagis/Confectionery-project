@@ -1,0 +1,257 @@
+.count {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.order-skel {
+  height: 88px;
+}
+
+.order {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 18px 14px 14px;
+
+  &[data-status='delivered'] {
+    opacity: 0.65;
+  }
+}
+
+.date-block {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 60px;
+  height: 60px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  line-height: 1;
+
+  strong {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 500;
+  }
+
+  span {
+    margin-top: 3px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  app-icon {
+    color: var(--text-muted);
+  }
+}
+
+.order:not([data-status='delivered'])[data-urgency='today'] .date-block,
+.order:not([data-status='delivered'])[data-urgency='soon'] .date-block {
+  border-color: var(--accent-text);
+  background: var(--accent-soft);
+}
+
+.order-main {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.order-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.order-id {
+  font-weight: 500;
+}
+
+/* Status is a native select dressed as a pill: accessible, and one click to change. */
+.status-select {
+  --tone: var(--text-muted);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding-inline: 10px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--tone);
+  transition: border-color 0.2s;
+
+  &:hover:not(:has(select:disabled)) {
+    border-color: var(--tone);
+  }
+
+  &:has(select:focus-visible) {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+  }
+
+  i {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    margin-inline-end: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  select {
+    appearance: none;
+    padding: 0 0 0 14px;
+    border: 0;
+    outline: none;
+    font: inherit;
+    color: inherit;
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238c8c87' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat left center;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  option {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  &[data-status='new'] {
+    --tone: var(--on-accent);
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  &[data-status='inProgress'] {
+    --tone: var(--accent-text);
+    border-color: var(--accent-text);
+  }
+
+  &[data-status='ready'] {
+    --tone: var(--text);
+    border-color: var(--text);
+  }
+}
+
+.client {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--on-ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--ink);
+}
+
+.client-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.3;
+
+  strong {
+    font-weight: 500;
+  }
+
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 12px;
+  }
+
+  a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--accent-text);
+    }
+  }
+}
+
+.notes {
+  margin: 2px 0 0;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--accent);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  white-space: pre-line;
+  background: var(--accent-soft);
+}
+
+.order-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+
+@media (max-width: 640px) {
+  .order {
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+  }
+
+  .order-side {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+
+  button {
+    height: 36px;
+    border: 0;
+    border-radius: 7px;
+    font: inherit;
+    color: var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      color 0.2s,
+      background 0.2s;
+
+    &:hover:not(:disabled) {
+      color: var(--text);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &.active {
+      color: var(--on-accent);
+      background: var(--accent);
+    }
+  }
+}

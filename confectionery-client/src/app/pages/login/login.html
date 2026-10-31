@@ -1,0 +1,55 @@
+<section class="login">
+  <div class="panel surface">
+    <div class="logo">D</div>
+    <h1>כניסת צוות</h1>
+    <p class="muted">הממשק לניהול מתכונים, הזמנות ולקוחות</p>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="field">
+        <span>שם משתמש</span>
+        <div class="input-wrap">
+          <app-icon name="user" [size]="18" />
+          <input class="input" formControlName="userName" autocomplete="username" dir="ltr" />
+        </div>
+      </label>
+
+      <label class="field">
+        <span>סיסמה</span>
+        <div class="input-wrap">
+          <app-icon name="lock" [size]="18" />
+          <input
+            class="input"
+            formControlName="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            autocomplete="current-password"
+            dir="ltr"
+          />
+          <button
+            type="button"
+            class="btn-icon suffix"
+            (click)="showPassword.set(!showPassword())"
+            [attr.aria-label]="showPassword() ? 'הסתרת סיסמה' : 'הצגת סיסמה'"
+          >
+            <app-icon [name]="showPassword() ? 'eyeOff' : 'eye'" [size]="16" />
+          </button>
+        </div>
+      </label>
+
+      @if (error()) {
+        <div class="error-box" role="alert"><app-icon name="alert" [size]="18" /> {{ error() }}</div>
+      }
+
+      <button type="submit" class="btn btn-primary submit" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="spinner"></span> מתחברים…
+        } @else {
+          התחברות <app-icon name="arrow" [size]="18" />
+        }
+      </button>
+    </form>
+
+    <button type="button" class="demo" (click)="fillDemo()">
+      <span>משתמש לדוגמה: <code>test</code> / <code>password</code></span>
+    </button>
+  </div>
+</section>

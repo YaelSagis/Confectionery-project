@@ -1,0 +1,116 @@
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a routerLink="/" class="brand" aria-label="Dolce – עמוד הבית">
+      <span class="brand-text">
+        <strong>Dolce</strong>
+        <small>{{ isAdmin() ? 'ניהול' : site.tagline }}</small>
+      </span>
+    </a>
+
+    <nav id="main-nav" class="nav" [class.open]="menuOpen()" aria-label="ניווט ראשי">
+      @for (link of links(); track link.path) {
+        <a
+          class="nav-link"
+          [routerLink]="link.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: !!link.exact }"
+          ariaCurrentWhenActive="page"
+        >
+          <app-icon [name]="link.icon" [size]="17" [stroke]="1.75" />
+          <span>{{ link.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="btn-icon"
+        (click)="theme.toggle()"
+        [attr.aria-label]="theme.theme() === 'dark' ? 'מעבר למצב בהיר' : 'מעבר למצב כהה'"
+        [title]="theme.theme() === 'dark' ? 'מצב בהיר' : 'מצב כהה'"
+      >
+        <app-icon [name]="theme.theme() === 'dark' ? 'sun' : 'moon'" [size]="18" [stroke]="1.75" />
+      </button>
+
+      @if (auth.isLoggedIn()) {
+        <span class="user-chip" [title]="auth.userName() ?? ''">
+          <span class="avatar">{{ userInitials() }}</span>
+          <span class="user-name">{{ auth.userName() }}</span>
+        </span>
+        <button type="button" class="btn-icon" (click)="logout()" aria-label="התנתקות" title="התנתקות">
+          <app-icon name="logout" [size]="18" [stroke]="1.75" />
+        </button>
+      } @else {
+        <a routerLink="/login" class="btn btn-ghost btn-sm login-btn">
+          <app-icon name="lock" [size]="15" />
+          <span>כניסת צוות</span>
+        </a>
+      }
+
+      <button
+        type="button"
+        class="btn-icon menu-toggle"
+        (click)="menuOpen.set(!menuOpen())"
+        aria-controls="main-nav"
+        [attr.aria-expanded]="menuOpen()"
+        aria-label="תפריט"
+      >
+        <app-icon [name]="menuOpen() ? 'close' : 'menu'" [size]="18" />
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="page" [class.container]="isAdmin()">
+  <router-outlet />
+</main>
+
+@if (isAdmin()) {
+  <footer class="container footer">
+    <span>© {{ year }} Dolce</span>
+    <span class="dot"></span>
+    <span>ממשק צוות</span>
+  </footer>
+} @else {
+  <footer class="site-footer">
+    <div class="container site-footer-grid">
+      <div class="footer-brand">
+        <strong>Dolce</strong>
+        <p>{{ site.tagline }}. עוגות ומאפים בעבודת יד, בהזמנה אישית.</p>
+        <a routerLink="/menu" class="btn btn-primary btn-sm">לתפריט ולהזמנה <app-icon name="arrow" [size]="15" /></a>
+      </div>
+
+      <div>
+        <h3>יצירת קשר</h3>
+        <ul>
+          <li><app-icon name="phone" [size]="15" /> <a [href]="'tel:' + site.phone" dir="ltr">{{ site.phone }}</a></li>
+          <li><app-icon name="mail" [size]="15" /> <a [href]="'mailto:' + site.email" dir="ltr">{{ site.email }}</a></li>
+          <li><app-icon name="pin" [size]="15" /> {{ site.address }}</li>
+          <li>
+            <app-icon name="instagram" [size]="15" />
+            <a [href]="'https://instagram.com/' + site.instagram" target="_blank" rel="noopener" dir="ltr">&#64;{{ site.instagram }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>שעות פתיחה</h3>
+        <ul class="hours">
+          @for (h of site.hours; track h.days) {
+            <li><span>{{ h.days }}</span><span dir="ltr">{{ h.time }}</span></li>
+          }
+        </ul>
+        <p class="kosher">{{ site.kosher }}</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <span>© {{ year }} Dolce</span>
+      <a routerLink="/login">כניסת צוות</a>
+    </div>
+  </footer>
+}
+
+<app-toast-host />
+<app-confirm-dialog />

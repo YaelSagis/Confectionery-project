@@ -1,0 +1,110 @@
+.login {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 260px);
+}
+
+.panel {
+  width: min(420px, 100%);
+  padding: 40px 32px 28px;
+  border-radius: var(--radius-xl);
+  text-align: center;
+  animation: pop-in 0.4s var(--ease);
+
+  h1 {
+    margin: 20px 0 6px;
+    font-size: 2rem;
+  }
+
+  > p {
+    margin: 0 0 28px;
+  }
+
+  .form {
+    text-align: start;
+  }
+}
+
+.logo {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--on-ink);
+  background: var(--ink);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    inset-inline-start: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+}
+
+.suffix {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+}
+
+.submit {
+  height: 50px;
+  margin-top: 6px;
+}
+
+.error-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  font-size: 0.9rem;
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+}
+
+.demo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 8px 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: var(--text);
+    border-color: var(--accent-text);
+  }
+
+  code {
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-family: ui-monospace, monospace;
+    color: var(--accent-text);
+    background: var(--accent-soft);
+  }
+}

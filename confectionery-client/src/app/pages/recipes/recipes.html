@@ -1,0 +1,332 @@
+<header class="page-head">
+  <div>
+    <span class="eyebrow">קטלוג</span>
+    <h1>מתכונים</h1>
+    <p>
+      @if (!loading()) {
+        {{ recipes().length }} מתכונים בקטלוג
+        @if (filtered().length !== recipes().length) {
+          · מוצגים {{ filtered().length }}
+        }
+      } @else {
+        טוענים את הקטלוג…
+      }
+    </p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreate()">
+    <app-icon name="plus" [size]="17" />
+    מתכון חדש
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="input-wrap">
+    <app-icon name="search" [size]="17" />
+    <input
+      class="input"
+      type="search"
+      placeholder="חיפוש לפי שם, תיאור או מצרך…"
+      aria-label="חיפוש מתכון"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+    />
+  </label>
+
+  <div class="chips" role="group" aria-label="סינון לפי רמת קושי">
+    <button type="button" class="chip" [class.active]="difficulty() === 'all'" (click)="difficulty.set('all')">
+      הכל
+    </button>
+    @for (d of difficulties; track d.value) {
+      <button type="button" class="chip" [class.active]="difficulty() === d.value" (click)="difficulty.set(d.value)">
+        {{ d.label }}
+      </button>
+    }
+  </div>
+
+  <select class="input" aria-label="מיון" [value]="sort()" (change)="setSort($any($event.target).value)">
+    <option value="name">מיון: שם</option>
+    <option value="price">מיון: מחיר</option>
+    <option value="prepTime">מיון: זמן הכנה</option>
+  </select>
+</div>
+
+@if (loading()) {
+  <div class="card-grid recipe-grid">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="skeleton recipe-skel"></div>
+    }
+  </div>
+} @else if (loadFailed()) {
+  <div class="empty">
+    <span class="empty-icon"><app-icon name="alert" [size]="22" /></span>
+    <h3>לא הצלחנו לטעון את המתכונים</h3>
+    <p>ודאו ששרת ה-API רץ, ונסו שוב.</p>
+    <button type="button" class="btn btn-ghost btn-sm" (click)="load()">
+      <app-icon name="refresh" [size]="16" /> ניסיון נוסף
+    </button>
+  </div>
+} @else if (!filtered().length) {
+  <div class="empty">
+    <span class="empty-icon"><app-icon [name]="recipes().length ? 'search' : 'cake'" [size]="22" /></span>
+    <h3>{{ recipes().length ? 'לא נמצאו מתכונים' : 'עדיין אין מתכונים' }}</h3>
+    <p>
+      {{ recipes().length ? 'נסו לשנות את החיפוש או את הסינון.' : 'הוסיפו את המתכון הראשון לקטלוג.' }}
+    </p>
+    @if (!recipes().length) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="openCreate()">
+        <app-icon name="plus" [size]="16" /> מתכון ראשון
+      </button>
+    }
+  </div>
+} @else {
+  <div class="card-grid recipe-grid">
+    @for (r of filtered(); track r.id; let i = $index) {
+      @let level = normalizeDifficulty(r.difficulty);
+      <article class="card recipe" [style.animation-delay.ms]="i * 40">
+        <div class="recipe-media">
+          <app-recipe-photo [image]="r.imageUrl" [name]="r.name" />
+          @if (r.price != null) {
+            <span class="recipe-price">{{ r.price | currency: 'ILS' : 'symbol-narrow' : '1.0-0' }}</span>
+          }
+          <div class="card-actions">
+            <button type="button" class="btn-icon" (click)="openEdit(r)" [attr.aria-label]="'עריכת ' + r.name" title="עריכה">
+              <app-icon name="edit" [size]="15" [stroke]="1.75" />
+            </button>
+            <button
+              type="button"
+              class="btn-icon danger"
+              (click)="remove(r)"
+              [attr.aria-label]="'מחיקת ' + r.name"
+              title="מחיקה"
+            >
+              <app-icon name="trash" [size]="15" [stroke]="1.75" />
+            </button>
+          </div>
+        </div>
+
+        @let ingredientCount = lines(r.ingredients).length;
+        @let stepCount = lines(r.instructions).length;
+        <div class="recipe-body">
+          <h3>
+            <button type="button" class="recipe-open" (click)="openView(r)">{{ r.name }}</button>
+          </h3>
+          @if (r.description) {
+            <p class="recipe-desc">{{ r.description }}</p>
+          }
+
+          <p class="recipe-content" [class.missing]="!ingredientCount && !stepCount">
+            <app-icon name="book" [size]="14" [stroke]="1.75" />
+            @if (ingredientCount || stepCount) {
+              {{ ingredientCount }} מצרכים · {{ stepCount }} שלבי הכנה
+            } @else {
+              עוד לא הוזן מתכון
+            }
+          </p>
+
+          <dl class="specs">
+            <div>
+              <dt>זמן הכנה</dt>
+              <dd>{{ r.prepTime != null ? r.prepTime + ' דק׳' : '—' }}</dd>
+            </div>
+            <div>
+              <dt>רמה</dt>
+              <dd>
+                @if (r.difficulty) {
+                  <span class="level" [attr.data-level]="level" aria-hidden="true"><i></i><i></i><i></i></span>
+                }
+                {{ difficultyLabel(r.difficulty) ?? '—' }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+    }
+  </div>
+}
+
+@if (viewing(); as v) {
+  @let ingredients = lines(v.ingredients);
+  @let steps = lines(v.instructions);
+  <app-modal [open]="true" [title]="v.name" [eyebrow]="'מתכון #' + v.id" [wide]="true" (closed)="viewing.set(null)">
+    @if (v.imageUrl) {
+      <app-recipe-photo class="view-photo" [image]="v.imageUrl" [name]="v.name" />
+    }
+    @if (v.description) {
+      <p class="view-desc">{{ v.description }}</p>
+    }
+
+    <dl class="specs view-specs">
+      <div>
+        <dt>זמן הכנה</dt>
+        <dd>{{ v.prepTime != null ? v.prepTime + ' דק׳' : '—' }}</dd>
+      </div>
+      <div>
+        <dt>רמה</dt>
+        <dd>
+          @if (v.difficulty) {
+            <span class="level" [attr.data-level]="normalizeDifficulty(v.difficulty)" aria-hidden="true"><i></i><i></i><i></i></span>
+          }
+          {{ difficultyLabel(v.difficulty) ?? '—' }}
+        </dd>
+      </div>
+      <div>
+        <dt>מחיר</dt>
+        <dd class="price">{{ v.price != null ? (v.price | currency: 'ILS' : 'symbol-narrow' : '1.0-0') : '—' }}</dd>
+      </div>
+    </dl>
+
+    @if (ingredients.length || steps.length) {
+      <div class="view-body">
+        <section>
+          <h3>מצרכים</h3>
+          @if (ingredients.length) {
+            <ul class="ingredients">
+              @for (item of ingredients; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          } @else {
+            <p class="muted">לא הוזנו מצרכים.</p>
+          }
+        </section>
+        <section>
+          <h3>אופן הכנה</h3>
+          @if (steps.length) {
+            <ol class="steps">
+              @for (step of steps; track $index) {
+                <li>{{ step }}</li>
+              }
+            </ol>
+          } @else {
+            <p class="muted">לא הוזן אופן הכנה.</p>
+          }
+        </section>
+      </div>
+    } @else {
+      <div class="view-empty">
+        <app-icon name="book" [size]="22" [stroke]="1.75" />
+        <p>המתכון עוד לא הוזן. אפשר להוסיף מצרכים ואופן הכנה מתי שנוח.</p>
+      </div>
+    }
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost danger-text" (click)="remove(v)">
+        <app-icon name="trash" [size]="16" /> מחיקה
+      </button>
+      <button type="button" class="btn btn-primary" (click)="openEdit(v)">
+        <app-icon name="edit" [size]="16" /> {{ ingredients.length || steps.length ? 'עריכה' : 'הוספת מתכון' }}
+      </button>
+    </div>
+  </app-modal>
+}
+
+<app-modal
+  [wide]="true"
+  [open]="editorOpen()"
+  [title]="editing() ? 'עריכת מתכון' : 'מתכון חדש'"
+  [eyebrow]="editing() ? 'מתכון #' + editing()!.id : 'הוספה לקטלוג'"
+  (closed)="editorOpen.set(false)"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <label class="field">
+      <span>שם המתכון</span>
+      <input class="input" formControlName="name" placeholder="למשל: עוגת גבינה פירורים" autocomplete="off" />
+      @if (hasError('name', 'required')) {
+        <small class="error">צריך לתת למתכון שם</small>
+      }
+      @if (hasError('name', 'maxlength')) {
+        <small class="error">עד 80 תווים</small>
+      }
+    </label>
+
+    <div class="form-row">
+      <label class="field">
+        <span>זמן הכנה (דקות)</span>
+        <input class="input" type="number" formControlName="prepTime" min="1" placeholder="45" />
+        @if (hasError('prepTime', 'min') || hasError('prepTime', 'max')) {
+          <small class="error">בין 1 ל-1440 דקות</small>
+        }
+      </label>
+      <label class="field">
+        <span>מחיר (₪)</span>
+        <input class="input" type="number" formControlName="price" min="0" step="0.5" placeholder="60" />
+        @if (hasError('price', 'min')) {
+          <small class="error">המחיר לא יכול להיות שלילי</small>
+        }
+      </label>
+    </div>
+
+    <div class="field">
+      <span>רמת קושי</span>
+      <div class="segmented">
+        @for (d of difficulties; track d.value) {
+          <label [class.active]="form.controls.difficulty.value === d.value">
+            <input type="radio" formControlName="difficulty" [value]="d.value" />
+            {{ d.label }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <label class="field">
+      <span>תיאור קצר ללקוחות <small class="hint">יוצג בתפריט באתר</small></span>
+      <input class="input" formControlName="description" placeholder="למשל: שכבות שוקולד בלגי וקרם מסקרפונה" autocomplete="off" />
+      @if (hasError('description', 'maxlength')) {
+        <small class="error">עד 160 תווים</small>
+      }
+    </label>
+
+    <div class="field">
+      <span>תמונה <small class="hint">תוצג בתפריט באתר</small></span>
+      <div class="photo-field">
+        <app-recipe-photo [image]="form.controls.imageUrl.value" [name]="form.controls.name.value" />
+        <div class="photo-actions">
+          <label class="btn btn-ghost btn-sm">
+            <app-icon name="plus" [size]="15" />
+            {{ form.controls.imageUrl.value ? 'החלפת תמונה' : 'העלאת תמונה' }}
+            <input type="file" accept="image/*" hidden (change)="pickImage($event)" />
+          </label>
+          @if (form.controls.imageUrl.value) {
+            <button type="button" class="btn btn-ghost btn-sm danger-text" (click)="form.controls.imageUrl.setValue('')">
+              <app-icon name="trash" [size]="15" /> הסרה
+            </button>
+          }
+          <input
+            class="input"
+            dir="ltr"
+            placeholder="או הדביקו קישור לתמונה"
+            aria-label="קישור לתמונה"
+            autocomplete="off"
+            [value]="form.controls.imageUrl.value.startsWith('data:') ? '' : form.controls.imageUrl.value"
+            (change)="form.controls.imageUrl.setValue($any($event.target).value.trim())"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <span class="eyebrow">המתכון</span>
+      <p>לא חובה. רק הצוות רואה את החלק הזה, ואפשר להשלים אותו גם אחר כך.</p>
+    </div>
+
+    <label class="field">
+      <span>מצרכים <small class="hint">מצרך בכל שורה</small></span>
+      <textarea class="input" formControlName="ingredients" rows="5" placeholder="200 גרם שוקולד מריר&#10;4 ביצים&#10;100 גרם סוכר"></textarea>
+    </label>
+
+    <label class="field">
+      <span>אופן הכנה <small class="hint">שלב בכל שורה</small></span>
+      <textarea class="input" formControlName="instructions" rows="6" placeholder="ממיסים את השוקולד עם החמאה&#10;מקציפים ביצים וסוכר&#10;אופים 25 דקות ב-170 מעלות"></textarea>
+    </label>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" (click)="editorOpen.set(false)">ביטול</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        @if (saving()) {
+          <span class="spinner"></span>
+        }
+        {{ editing() ? 'שמירת שינויים' : 'הוספה לקטלוג' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

@@ -1,0 +1,237 @@
+<header class="page-head">
+  <div>
+    <span class="eyebrow">ניהול</span>
+    <h1>הזמנות</h1>
+    <p>
+      @if (loading()) {
+        טוענים הזמנות…
+      } @else {
+        {{ counts().all }} הזמנות · {{ counts().new }} חדשות ממתינות לטיפול
+      }
+    </p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreate()">
+    <app-icon name="plus" [size]="18" />
+    הזמנה חדשה
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="input-wrap">
+    <app-icon name="search" [size]="18" />
+    <input
+      class="input"
+      type="search"
+      placeholder="חיפוש לפי לקוח, טלפון, מאפה או מספר הזמנה…"
+      aria-label="חיפוש הזמנה"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+    />
+  </label>
+  <div class="chips" role="group" aria-label="סינון הזמנות">
+    <button type="button" class="chip" [class.active]="filter() === 'all'" (click)="filter.set('all')">
+      הכל <span class="count">{{ counts().all }}</span>
+    </button>
+    @for (s of statuses; track s.value) {
+      <button type="button" class="chip" [class.active]="filter() === s.value" (click)="filter.set(s.value)">
+        {{ s.label }} <span class="count">{{ counts()[s.value] }}</span>
+      </button>
+    }
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="list">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="skeleton order-skel"></div>
+    }
+  </div>
+} @else if (loadFailed()) {
+  <div class="empty">
+    <span class="empty-icon"><app-icon name="alert" [size]="22" /></span>
+    <h3>לא הצלחנו לטעון הזמנות</h3>
+    <p>ודאו ששרת ה-API רץ, ונסו שוב.</p>
+    <button type="button" class="btn btn-ghost btn-sm" (click)="load()">
+      <app-icon name="refresh" [size]="16" /> ניסיון נוסף
+    </button>
+  </div>
+} @else if (!filtered().length) {
+  <div class="empty">
+    <span class="empty-icon"><app-icon [name]="orders().length ? 'search' : 'receipt'" [size]="22" /></span>
+    <h3>{{ orders().length ? 'אין הזמנות שמתאימות לסינון' : 'עדיין אין הזמנות' }}</h3>
+    <p>{{ orders().length ? 'נסו חיפוש אחר או סינון אחר.' : 'כשתיקלט הזמנה ראשונה, היא תופיע כאן.' }}</p>
+    @if (!orders().length) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="openCreate()">
+        <app-icon name="plus" [size]="16" /> קליטת הזמנה
+      </button>
+    }
+  </div>
+} @else {
+  <div class="list">
+    @for (o of filtered(); track o.id; let i = $index) {
+      <article class="card order" [attr.data-status]="o.status" [attr.data-urgency]="o.urgency" [style.animation-delay.ms]="i * 40">
+        <div class="date-block">
+          @if (o.date) {
+            <strong>{{ o.date | date: 'd' }}</strong>
+            <span>{{ o.date | date: 'MMM' }}</span>
+          } @else {
+            <app-icon name="calendar" [size]="22" />
+          }
+        </div>
+
+        <div class="order-main">
+          <div class="order-title">
+            <span class="order-id">הזמנה #{{ o.id }}</span>
+            <label class="status-select" [attr.data-status]="o.status">
+              <i></i>
+              <select
+                [value]="o.status"
+                [disabled]="!o.client || updating() === o.id"
+                (change)="setStatus(o, $any($event.target).value)"
+                [attr.aria-label]="'סטטוס הזמנה ' + o.id"
+              >
+                @for (s of statuses; track s.value) {
+                  <option [value]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          @if (o.client) {
+            <div class="client">
+              <span class="avatar">{{ initials(o.client.name) }}</span>
+              <span class="client-text">
+                <strong>{{ o.client.name }}</strong>
+                <span class="contact">
+                  @if (o.client.phone) {
+                    <a [href]="'tel:' + o.client.phone" dir="ltr">{{ o.client.phone }}</a>
+                  }
+                  @if (o.client.email && o.client.email !== '-') {
+                    <a [href]="'mailto:' + o.client.email">{{ o.client.email }}</a>
+                  }
+                </span>
+              </span>
+            </div>
+          } @else {
+            <span class="muted">לא משויך לקוח</span>
+          }
+          @if (o.notes) {
+            <p class="notes">{{ o.notes }}</p>
+          }
+        </div>
+
+        <div class="order-side">
+          @if (o.date) {
+            <span class="tag"><app-icon name="calendar" [size]="14" /> {{ o.date | date: 'EEEE, d בMMMM' }}</span>
+          }
+          <button type="button" class="btn-icon" (click)="openEdit(o)" [attr.aria-label]="'עריכת הזמנה ' + o.id" title="עריכה">
+            <app-icon name="edit" [size]="16" />
+          </button>
+          <button
+            type="button"
+            class="btn-icon danger"
+            (click)="remove(o)"
+            [attr.aria-label]="'מחיקת הזמנה ' + o.id"
+            title="מחיקה"
+          >
+            <app-icon name="trash" [size]="16" />
+          </button>
+        </div>
+      </article>
+    }
+  </div>
+}
+
+<app-modal
+  [open]="editorOpen()"
+  [title]="editing() ? 'עריכת הזמנה #' + editing()!.id : 'הזמנה חדשה'"
+  [eyebrow]="editing() ? 'עדכון פרטים' : 'קליטת הזמנה'"
+  (closed)="editorOpen.set(false)"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="segmented" role="group" aria-label="סוג לקוח">
+      <button type="button" [class.active]="clientMode() === 'existing'" (click)="setClientMode('existing')" [disabled]="!clients().length">
+        לקוח קיים
+      </button>
+      <button type="button" [class.active]="clientMode() === 'new'" (click)="setClientMode('new')">לקוח חדש</button>
+    </div>
+
+    @if (clientMode() === 'existing') {
+      <label class="field">
+        <span>בחירת לקוח</span>
+        <div class="input-wrap">
+          <app-icon name="users" [size]="18" />
+          <select class="input" formControlName="clientId">
+            <option [ngValue]="null" disabled>בחרו לקוח מהרשימה…</option>
+            @for (c of clients(); track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}{{ c.email ? ' · ' + c.email : '' }}</option>
+            }
+          </select>
+        </div>
+        @if (hasError('clientId', 'required')) {
+          <small class="error">צריך לבחור לקוח</small>
+        }
+      </label>
+    } @else {
+      <label class="field">
+        <span>שם הלקוח</span>
+        <div class="input-wrap">
+          <app-icon name="user" [size]="18" />
+          <input class="input" formControlName="name" placeholder="שם מלא" autocomplete="name" />
+        </div>
+        @if (hasError('name', 'required')) {
+          <small class="error">שם הלקוח הוא שדה חובה</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>אימייל</span>
+        <div class="input-wrap">
+          <app-icon name="mail" [size]="18" />
+          <input class="input" type="email" dir="ltr" formControlName="email" placeholder="name@example.com" autocomplete="email" />
+        </div>
+        @if (hasError('email', 'required')) {
+          <small class="error">צריך אימייל ליצירת קשר</small>
+        } @else if (hasError('email', 'email')) {
+          <small class="error">כתובת האימייל לא תקינה</small>
+        }
+      </label>
+
+      <label class="field">
+        <span>טלפון <small class="hint">לא חובה</small></span>
+        <div class="input-wrap">
+          <app-icon name="phone" [size]="18" />
+          <input class="input" type="tel" dir="ltr" formControlName="phone" placeholder="050-1234567" autocomplete="tel" />
+        </div>
+        @if (hasError('phone', 'pattern')) {
+          <small class="error">מספר הטלפון לא תקין</small>
+        }
+      </label>
+    }
+
+    <label class="field">
+      <span>תאריך מסירה</span>
+      <div class="input-wrap">
+        <app-icon name="calendar" [size]="18" />
+        <input class="input" type="date" formControlName="deliveryDate" [min]="editing() ? null : today" />
+      </div>
+    </label>
+
+
+    <label class="field">
+      <span>מה הוזמן</span>
+      <textarea class="input textarea" formControlName="notes" rows="3" placeholder="למשל: 2 × עוגת גבינה, 1 × עוגיות שוקולד צ׳יפס"></textarea>
+    </label>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" (click)="editorOpen.set(false)">ביטול</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        @if (saving()) {
+          <span class="spinner"></span>
+        } @else {
+          <app-icon name="check" [size]="18" />
+        }
+        {{ editing() ? 'שמירת שינויים' : 'קליטת הזמנה' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

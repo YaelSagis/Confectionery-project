@@ -1,0 +1,131 @@
+<header class="page-head">
+  <div>
+    <span class="eyebrow">{{ today | date: 'EEEE, d בMMMM' }}</span>
+    <h1>{{ greeting }}{{ auth.userName() ? ', ' + auth.userName() : '' }}</h1>
+    <p>
+      @if (loading()) {
+        בודקים מה מחכה היום…
+      } @else if (newOrders().length) {
+        יש {{ newOrders().length }} הזמנות חדשות שמחכות לטיפול.
+      } @else {
+        אין הזמנות חדשות שמחכות. הכל מטופל.
+      }
+    </p>
+  </div>
+  <span class="status" [class.ok]="online() === true" [class.down]="online() === false" role="status">
+    <span class="pulse"></span>
+    @switch (online()) {
+      @case (true) { השרת מחובר }
+      @case (false) { השרת לא זמין }
+      @default { בודקים חיבור… }
+    }
+  </span>
+</header>
+
+<section class="stats" aria-label="נתונים">
+  @for (s of stats(); track s.label) {
+    <a class="stat" [class.highlight]="s.highlight" [routerLink]="s.link" [queryParams]="s.query">
+      <span class="stat-top">
+        <span class="stat-label">{{ s.label }}</span>
+        <app-icon [name]="s.icon" [size]="16" [stroke]="1.75" />
+      </span>
+      @if (loading()) {
+        <span class="skeleton stat-skel"></span>
+      } @else {
+        <strong>{{ s.value }}</strong>
+      }
+      <span class="stat-hint">{{ s.hint }} <app-icon name="arrow" [size]="13" /></span>
+    </a>
+  }
+</section>
+
+<div class="panels">
+  <section class="panel">
+    <header class="panel-head">
+      <h2>ממתינות לטיפול</h2>
+      <a routerLink="/admin/orders" [queryParams]="{ status: 'new' }" class="panel-link">לכל ההזמנות <app-icon name="arrow" [size]="14" /></a>
+    </header>
+
+    @if (loading()) {
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton row-skel"></div>
+      }
+    } @else if (newOrders().length) {
+      <ul class="rows">
+        @for (o of newOrders().slice(0, 6); track o.id) {
+          <li>
+            <a routerLink="/admin/orders" [queryParams]="{ status: 'new' }">
+              <span class="row-main">
+                <strong>#{{ o.id }} · {{ o.client?.name ?? 'ללא לקוח' }}</strong>
+                @if (summary(o)) {
+                  <small>{{ summary(o) }}</small>
+                }
+              </span>
+              <span class="due" [class.late]="dueLabel(o) === 'באיחור'">{{ dueLabel(o) }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="panel-empty">
+        <span class="empty-icon"><app-icon name="check" [size]="20" /></span>
+        <p>אין הזמנות חדשות</p>
+      </div>
+    }
+  </section>
+
+  <section class="panel">
+    <header class="panel-head">
+      <h2>מסירות השבוע</h2>
+      <a routerLink="/admin/orders" class="panel-link">ליומן ההזמנות <app-icon name="arrow" [size]="14" /></a>
+    </header>
+
+    @if (loading()) {
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton row-skel"></div>
+      }
+    } @else if (upcoming().length) {
+      <ul class="rows">
+        @for (o of upcoming().slice(0, 6); track o.id) {
+          <li>
+            <a routerLink="/admin/orders">
+              <span class="date-chip">
+                <strong>{{ o.date | date: 'd' }}</strong>
+                <span>{{ o.date | date: 'EEE' }}</span>
+              </span>
+              <span class="row-main">
+                <strong>{{ o.client?.name ?? 'ללא לקוח' }}</strong>
+                <small>{{ statusLabel(o.status) }} · {{ dueLabel(o) }}</small>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="panel-empty">
+        <span class="empty-icon"><app-icon name="calendar" [size]="20" /></span>
+        <p>אין מסירות בשבוע הקרוב</p>
+      </div>
+    }
+  </section>
+
+  @if (!loading() && missingRecipe().length) {
+    <section class="panel panel-wide">
+      <header class="panel-head">
+        <h2>מתכונים שעוד לא הוזנו</h2>
+        <a routerLink="/admin/recipes" class="panel-link">לקטלוג <app-icon name="arrow" [size]="14" /></a>
+      </header>
+      <p class="panel-note">למוצרים האלה יש שם ומחיר, אבל עוד לא נכתבו להם מצרכים ואופן הכנה.</p>
+      <ul class="chips-list">
+        @for (r of missingRecipe(); track r.id) {
+          <li>
+            <a routerLink="/admin/recipes">
+              <app-pastry [name]="r.name" />
+              {{ r.name }}
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

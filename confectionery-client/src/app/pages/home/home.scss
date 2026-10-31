@@ -1,0 +1,461 @@
+/* ---------- hero ---------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: 64px;
+  padding-block: 48px 72px;
+}
+
+h1 {
+  margin: 20px 0 22px;
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+
+  .accent {
+    display: block;
+    width: fit-content;
+    color: var(--text);
+    background: linear-gradient(transparent 58%, var(--accent) 58% 90%, transparent 90%);
+  }
+}
+
+:host-context([data-theme='dark']) h1 .accent {
+  color: var(--accent-text);
+  background: none;
+}
+
+.lead {
+  max-width: 470px;
+  margin: 0 0 32px;
+  font-size: 1.15rem;
+  font-weight: 300;
+  color: var(--text-muted);
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .btn {
+    height: 50px;
+    padding-inline: 26px;
+  }
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  app-icon {
+    color: var(--accent-text);
+  }
+}
+
+/* Arched frame: the classic shape of a patisserie window. */
+.hero-media {
+  position: relative;
+  margin: 0;
+  justify-self: center;
+  width: min(100%, 440px);
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 999px 999px var(--radius-xl) var(--radius-xl);
+    animation: rise 0.7s var(--ease) backwards;
+  }
+
+  /* Offset outline behind the photo */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 16px -16px -16px 16px;
+    z-index: -1;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px 999px var(--radius-xl) var(--radius-xl);
+  }
+}
+
+.stamp {
+  position: absolute;
+  bottom: 36px;
+  inset-inline-end: -44px;
+  width: 124px;
+  height: 124px;
+  /* Text on a path disappears under the page's RTL direction. */
+  direction: ltr;
+  animation: spin 40s linear infinite;
+
+  circle {
+    fill: var(--accent);
+  }
+
+  text {
+    font-family: var(--font-script);
+    font-size: 10.5px;
+    font-style: italic;
+    font-weight: 600;
+    fill: var(--on-accent);
+  }
+
+  .stamp-mark {
+    font-size: 26px;
+    letter-spacing: 0;
+  }
+}
+
+/* ---------- scrolling strip ---------- */
+.strip {
+  overflow: hidden;
+  padding-block: 16px;
+  color: var(--on-ink);
+  background: var(--ink);
+}
+
+.strip-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+
+  /* Spacing lives on the items (not gap) so the two copies are exactly half the track each. */
+  span {
+    padding-inline: 16px;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    white-space: nowrap;
+  }
+
+  i {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+}
+
+/* RTL: the track moves toward the right. */
+@keyframes marquee {
+  to {
+    transform: translateX(50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strip-track,
+  .stamp {
+    animation: none;
+  }
+}
+
+/* ---------- sections ---------- */
+.section {
+  padding-top: 88px;
+  scroll-margin-top: 80px;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+
+  h2 {
+    margin: 10px 0 0;
+    font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  }
+}
+
+/* ---------- about ---------- */
+.about {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  align-items: center;
+  gap: 72px;
+}
+
+.about-media {
+  margin: 0;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 9 / 11;
+    object-fit: cover;
+    border-radius: var(--radius-xl);
+  }
+}
+
+.about-copy {
+  h2 {
+    margin: 12px 0 20px;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+  }
+
+  p {
+    max-width: 480px;
+    margin: 0 0 14px;
+    font-size: 1.08rem;
+    font-weight: 300;
+    color: var(--text-muted);
+  }
+}
+
+.signature {
+  display: block;
+  margin-top: 24px;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--accent-text);
+}
+
+/* ---------- gallery ---------- */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    transition: transform 0.6s var(--ease);
+  }
+
+  li:hover img {
+    transform: scale(1.05);
+  }
+}
+
+/* ---------- how it works ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  position: relative;
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+
+  h3 {
+    margin: 18px 0 6px;
+    font-size: 1.3rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+}
+
+.step-num {
+  position: absolute;
+  top: 20px;
+  inset-inline-end: 22px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--border-strong);
+}
+
+.step-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+/* ---------- faq ---------- */
+.faq-list {
+  max-width: 820px;
+  border-top: 1px solid var(--border);
+
+  details {
+    border-bottom: 1px solid var(--border);
+
+    &[open] .faq-mark::after {
+      transform: rotate(90deg) scaleX(0);
+    }
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    cursor: pointer;
+    list-style: none;
+    transition: color 0.2s;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:hover {
+      color: var(--accent-text);
+    }
+  }
+
+  p {
+    max-width: 680px;
+    margin: -6px 0 20px;
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+}
+
+/* A plus that turns into a minus when the answer is open. */
+.faq-mark {
+  position: relative;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 6px 0 auto;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+  }
+
+  &::after {
+    transform: rotate(90deg);
+    transition: transform 0.25s var(--ease);
+  }
+}
+
+/* ---------- photo band ---------- */
+.band {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 88px;
+  padding: 72px 56px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  color: #f7f2ea;
+  background-color: #1a1714;
+  background-position: center;
+  background-size: cover;
+
+  /* Flat dark scrim so the text reads over any photo. */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 17, 14, 0.62);
+  }
+
+  > * {
+    position: relative;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  }
+
+  p {
+    max-width: 440px;
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  .btn {
+    height: 50px;
+    padding-inline: 26px;
+  }
+}
+
+@media (max-width: 960px) {
+  .hero,
+  .about {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .hero {
+    padding-top: 32px;
+  }
+
+  .hero-media {
+    width: min(100%, 360px);
+  }
+
+  .stamp {
+    inset-inline-end: -16px;
+    width: 104px;
+    height: 104px;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .band {
+    padding: 48px 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-media::before {
+    display: none;
+  }
+
+  .section {
+    padding-top: 64px;
+  }
+}

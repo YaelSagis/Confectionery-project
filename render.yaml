@@ -1,0 +1,33 @@
+# Render Blueprint: the API (Docker) and the Angular site (static).
+# Secrets (ConnectionString, Jwt__Key) are set in the Render dashboard, never in the repo.
+services:
+  - type: web
+    name: confectionery-backend
+    runtime: docker
+    rootDir: confectionery-backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "8080"
+      - key: ConnectionString
+        sync: false
+      - key: Jwt__Key
+        generateValue: true
+
+  - type: web
+    name: confectionery-client
+    runtime: static
+    rootDir: confectionery-client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/confectionery-client/browser
+    routes:
+      # The site calls /api/...; Render forwards it to the API, so no CORS is needed.
+      - type: rewrite
+        source: /api/*
+        destination: https://confectionery-backend.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html

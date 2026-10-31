@@ -1,0 +1,156 @@
+<header class="page-head">
+  <div>
+    <span class="eyebrow">קהילה</span>
+    <h1>לקוחות</h1>
+    <p>
+      @if (loading()) {
+        טוענים לקוחות…
+      } @else {
+        {{ clients().length }} לקוחות רשומים · {{ withPhone() }} עם מספר טלפון
+      }
+    </p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreate()">
+    <app-icon name="plus" [size]="18" />
+    לקוח חדש
+  </button>
+</header>
+
+<div class="toolbar">
+  <label class="input-wrap">
+    <app-icon name="search" [size]="18" />
+    <input
+      class="input"
+      type="search"
+      placeholder="חיפוש לפי שם, אימייל או טלפון…"
+      aria-label="חיפוש לקוח"
+      [value]="query()"
+      (input)="query.set($any($event.target).value)"
+    />
+  </label>
+</div>
+
+@if (loading()) {
+  <div class="card-grid">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="skeleton client-skel"></div>
+    }
+  </div>
+} @else if (loadFailed()) {
+  <div class="empty">
+    <span class="empty-icon"><app-icon name="alert" [size]="22" /></span>
+    <h3>לא הצלחנו לטעון את הלקוחות</h3>
+    <p>ודאו ששרת ה-API רץ, ונסו שוב.</p>
+    <button type="button" class="btn btn-ghost btn-sm" (click)="load()">
+      <app-icon name="refresh" [size]="16" /> ניסיון נוסף
+    </button>
+  </div>
+} @else if (!filtered().length) {
+  <div class="empty">
+    <span class="empty-icon"><app-icon [name]="clients().length ? 'search' : 'users'" [size]="22" /></span>
+    <h3>{{ clients().length ? 'לא נמצאו לקוחות' : 'עדיין אין לקוחות' }}</h3>
+    <p>{{ clients().length ? 'נסו חיפוש אחר.' : 'הוסיפו לקוח ראשון, או קלטו הזמנה חדשה.' }}</p>
+  </div>
+} @else {
+  <div class="card-grid">
+    @for (c of filtered(); track c.id ?? c.email; let i = $index) {
+      <article class="card client" [style.animation-delay.ms]="i * 40">
+        <div class="client-head">
+          <span class="avatar">{{ initials(c.name) }}</span>
+          <span class="client-id">#{{ c.id }}</span>
+        </div>
+        <h3>{{ c.name }}</h3>
+        @if (c.email) {
+          <a class="email" [href]="'mailto:' + c.email" dir="ltr">{{ c.email }}</a>
+        } @else {
+          <span class="email">אין כתובת אימייל</span>
+        }
+        @if (c.phone) {
+          <a class="email phone" [href]="'tel:' + c.phone" dir="ltr">{{ c.phone }}</a>
+        }
+        <div class="client-actions">
+          @if (c.phone) {
+            <a class="btn btn-ghost btn-sm" [href]="'tel:' + c.phone">
+              <app-icon name="phone" [size]="16" /> חיוג
+            </a>
+          }
+          @if (c.email) {
+            <a class="btn btn-ghost btn-sm" [href]="'mailto:' + c.email">
+              <app-icon name="mail" [size]="16" /> מייל
+            </a>
+          }
+          @if (c.id) {
+            <button type="button" class="btn-icon" (click)="openEdit(c)" [attr.aria-label]="'עריכת ' + c.name" title="עריכה">
+              <app-icon name="edit" [size]="16" />
+            </button>
+            <button
+              type="button"
+              class="btn-icon danger"
+              (click)="remove(c)"
+              [attr.aria-label]="'מחיקת ' + c.name"
+              title="מחיקה"
+            >
+              <app-icon name="trash" [size]="16" />
+            </button>
+          }
+        </div>
+      </article>
+    }
+  </div>
+}
+
+<app-modal
+  [open]="editorOpen()"
+  [title]="editing() ? 'עריכת לקוח' : 'לקוח חדש'"
+  [eyebrow]="editing() ? editing()!.name : 'הצטרפות'"
+  (closed)="editorOpen.set(false)"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <label class="field">
+      <span>שם מלא</span>
+      <div class="input-wrap">
+        <app-icon name="user" [size]="18" />
+        <input class="input" formControlName="name" placeholder="שם הלקוח" autocomplete="name" />
+      </div>
+      @if (hasError('name', 'required')) {
+        <small class="error">השם הוא שדה חובה</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>אימייל</span>
+      <div class="input-wrap">
+        <app-icon name="mail" [size]="18" />
+        <input class="input" type="email" dir="ltr" formControlName="email" placeholder="name@example.com" autocomplete="email" />
+      </div>
+      @if (hasError('email', 'required')) {
+        <small class="error">האימייל הוא שדה חובה</small>
+      } @else if (hasError('email', 'email')) {
+        <small class="error">כתובת האימייל לא תקינה</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>טלפון <small class="hint">לא חובה</small></span>
+      <div class="input-wrap">
+        <app-icon name="phone" [size]="18" />
+        <input class="input" type="tel" dir="ltr" formControlName="phone" placeholder="050-1234567" autocomplete="tel" />
+      </div>
+      @if (hasError('phone', 'pattern')) {
+        <small class="error">מספר הטלפון לא תקין</small>
+      }
+    </label>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" (click)="editorOpen.set(false)">ביטול</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        @if (saving()) {
+          <span class="spinner"></span>
+        } @else {
+          <app-icon name="check" [size]="18" />
+        }
+        {{ editing() ? 'שמירה' : 'הוספת לקוח' }}
+      </button>
+    </div>
+  </form>
+</app-modal>
